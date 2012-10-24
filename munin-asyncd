@@ -132,9 +132,12 @@ MAIN: while(1) {
 		}
 
 		# Should update it
-		$last_updated{$plugin} = $when;
-		if ($when + $plugin_rate < $when_next) {
-			$when_next = $when + $plugin_rate;
+		my $should_have_been = $when - ($when % $plugin_rate);
+		my $should_be_next = $should_have_been + $plugin_rate;
+
+		$last_updated{$plugin} = $should_have_been;
+		if ($should_be_next < $when_next) {
+			$when_next = $should_be_next;
 		} 
 
 		if ($do_fork && fork()) {
