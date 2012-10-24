@@ -1,4 +1,4 @@
-#! @@PERL@@
+#! /usr/bin/perl
 # -*- cperl -*-
 #
 # Copyright (C) 2010 Steve Schnepp
@@ -32,7 +32,7 @@ use Munin::Node::SpoolWriter;
 
 my $host = "localhost:4949";
 my $metahostname;
-my $SPOOLDIR = "@@SPOOLDIR@@";
+my $SPOOLDIR = "/var/lib/munin/spool";
 my $intervalsize = 86400;
 my $retaincount = 7;
 my $nocleanup;
@@ -264,7 +264,7 @@ munin-asyncd [options]
 
  Options:
      --host <hostname:port>     Connect to this munin-node [localhost:4949]
-     -s --spooldir <spooldir>      Store the spooled data in this dir [@@SPOOLDIR@@]
+     -s --spooldir <spooldir>      Store the spooled data in this dir [/var/lib/munin/spool]
      -i --interval <seconds>    Override default interval size of one day [86400]
      -r --retain <count>        Specify number of interval files to retain [7]
      -n --nocleanup             Disable automated spool dir cleanup
