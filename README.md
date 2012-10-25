@@ -3,17 +3,13 @@ munin
 
 Here are a set of Open Query customisations for Munin.
 
-
 munin-asyncd has been altered to run strictly on the interval relative to the
 wall clock rather than the async starting time.
 
-Other elements here are customisation that we intend to contribute back.
+Other elements here are customisations that we intend to contribute back.
 
 See offical codebase:
 https://github.com/munin-monitoring/munin
-
-and https://github.com/munin-monitoring
-
 
 Using munin-async
 -----------------
@@ -31,10 +27,8 @@ After that /etc/init.d/munin-async will work as normal
 Using our plugins
 -----------------
 
-In the /etc/munin/plugin directory;
+git clone https://github.com/openquery/munin.git /etc/munin/openquery
 
-add a symlink to the ones you want.
-e.g.:
-ln -s ../openquery/mysql_
+sudo /etc/munin/openquery/link.sh
 
 

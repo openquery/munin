@@ -1,23 +1,32 @@
-rm -f /etc/munin/plugins/mysql_bin_relay_log ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_bin_relay_log
-rm -f /etc/munin/plugins/mysql_commands ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_commands
-rm -f /etc/munin/plugins/mysql_connections ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_connections
-rm -f /etc/munin/plugins/mysql_files_tables ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_files_tables
-rm -f /etc/munin/plugins/mysql_innodb_bpool ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_innodb_bpool
-rm -f /etc/munin/plugins/mysql_innodb_bpool_act ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_innodb_bpool_act
-rm -f /etc/munin/plugins/mysql_innodb_insert_buf ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_innodb_insert_buf
-rm -f /etc/munin/plugins/mysql_innodb_io ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_innodb_io
-rm -f /etc/munin/plugins/mysql_innodb_io_pend ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_innodb_io_pend
-rm -f /etc/munin/plugins/mysql_innodb_log ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_innodb_log
-rm -f /etc/munin/plugins/mysql_innodb_rows ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_innodb_rows
-rm -f /etc/munin/plugins/mysql_innodb_semaphores ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_innodb_semaphores
-rm -f /etc/munin/plugins/mysql_innodb_tnx ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_innodb_tnx
-rm -f /etc/munin/plugins/mysql_myisam_indexes ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_myisam_indexes
-rm -f /etc/munin/plugins/mysql_network_traffic ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_network_traffic
-rm -f /etc/munin/plugins/mysql_qcache ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_qcache
-rm -f /etc/munin/plugins/mysql_qcache_mem ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_qcache_mem
-rm -f /etc/munin/plugins/mysql_replication ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_replication
-rm -f /etc/munin/plugins/mysql_select_types ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_select_types
-rm -f /etc/munin/plugins/mysql_slow ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_slow
-rm -f /etc/munin/plugins/mysql_sorts ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_sorts
-rm -f /etc/munin/plugins/mysql_table_locks ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_table_locks
-rm -f /etc/munin/plugins/mysql_tmp_tables ; ln -s /etc/munin/openquery/mysql_ /etc/munin/plugins/mysql_tmp_tables
+#!/bin/sh
+
+
+for m in  \
+mysql_bin_relay_log \
+mysql_commands \
+mysql_connections \
+mysql_files_tables \
+mysql_innodb_bpool \
+mysql_innodb_bpool_act \
+mysql_innodb_insert_buf \
+mysql_innodb_io \
+mysql_innodb_io_pend \
+mysql_innodb_log \
+mysql_innodb_rows \
+mysql_innodb_semaphores \
+mysql_innodb_tnx \
+mysql_myisam_indexes \
+mysql_network_traffic \
+mysql_qcache \
+mysql_qcache_mem  \
+mysql_replication \
+mysql_select_types \
+mysql_slow \
+mysql_sorts \
+mysql_table_locks \
+mysql_tmp_tables \
+;
+do
+rm -f "/etc/munin/plugins/${m}"
+ln -s /etc/munin/openquery/mysql_ "/etc/munin/plugins/${m}"
+done
