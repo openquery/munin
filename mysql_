@@ -1068,6 +1068,7 @@ sub parse_innodb_status {
 
     # Add a dummy section to the end in case the innodb status output
     # has been truncated (Happens for status > 64K characters)
+#    $_ .= "\n----------\nDUMMY\n";
     $_ .= "\n----------\nDUMMY\n----------\n"; 
 
     my %section_map = (
@@ -1111,6 +1112,7 @@ sub parse_innodb_status {
 my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 
 
+#sub match_dashes { return m/\G-+\n(?!-)/gc; }
 sub match_new_section { 
    return m/\G
             -+\n                 # --------------------------- 
@@ -1135,9 +1137,10 @@ sub parse_section {
 
     #warn substr($_, pos(), 10);
     for (;;) {
-       return if match_new_section;
-       next if $parser->();
-       skip_line();
+#	return if match_dashes();
+	return if match_new_section;
+	next if $parser->();
+	skip_line();
     }
 }
 
@@ -1219,12 +1222,29 @@ sub parse_file_io {
 sub parse_insert_buffer_and_adaptive_hash_index {
     parse_section(
 	sub {
-	    m/\G(\d+) inserts, (\d+) merged recs, (\d+) merges\n/gc && do {
-		$data->{ib_ibuf_inserts}    = $1;
-		$data->{ib_ibuf_merged_rec} = $2;
-		$data->{ib_ibuf_merges}     = $3;
-		return 1;
-	    };
+            # MySQL < 5.5
+            m/\G(\d+) inserts, (\d+) merged recs, (\d+) merges\n/gc && do {
+                $data->{ib_ibuf_inserts}    = $1;
+                $data->{ib_ibuf_merged_rec} = $2;
+                $data->{ib_ibuf_merges}     = $3;
+                return 1;
+            };
+            # MySQL >= 5.5
+            m/\Gmerged operations:\n insert (\d+), delete mark \d+, delete \d+\ndiscarded operations:\n insert (\d+), delete mark \d+, delete \d+\n/gc && do {
+                $data->{ib_ibuf_inserts} = $1;
+                $data->{ib_ibuf_merged_rec} = $1 + $2;
+                return 1;
+            };
+            m/\GIbuf: size (\d+), free list len (\d+), seg size (\d+),(?: (\d+) merges)?\n/gc && do {
+                $data->{ib_ibuf_size}     = $1;
+                $data->{ib_ibuf_free_len} = $2;
+                $data->{ib_ibuf_seg_size} = $3;
+                $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
+                return 1;
+            };
+
+
+
 	}
     );
 }
