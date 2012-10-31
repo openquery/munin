@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 
 if pidof mysqld
@@ -36,9 +36,9 @@ fi
 
 pushd /etc/munin/openquery/conf
 for conf in * ; do
-  if [ ! -f "${conf}" ];
+  if [ ! -e "${conf}" ];
   then
-    ln -s "/etc/munin/plugin-conf.d/${conf}" /etc/munin/plugin-conf.d/
+    ln -s "/etc/munin/openquery/conf/${conf}" /etc/munin/plugin-conf.d/
   fi
 done
 popd
