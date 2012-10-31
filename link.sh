@@ -36,10 +36,8 @@ fi
 
 pushd /etc/munin/openquery/conf
 for conf in * ; do
-  if [ ! -e "${conf}" ];
-  then
+  [ -e "/etc/munin/plugin-conf.d/${conf}" ] || \
     ln -s "/etc/munin/openquery/conf/${conf}" /etc/munin/plugin-conf.d/
-  fi
 done
 popd
 
