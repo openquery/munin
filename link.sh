@@ -42,4 +42,4 @@ done
 popd
 
 service munin-node restart || /etc/init.d/munin-node restart
-service munin-async restart || /etc/init.d/munin-async restart
+service munin-asyncd restart || /etc/init.d/munin-asyncd restart
