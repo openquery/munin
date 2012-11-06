@@ -49,6 +49,10 @@ if selinuxenabled; then
 
 
   restorecon -rv /etc/munin/openquery/
+  pushd /etc/munin/openquery
+  make -f /usr/share/selinux/devel/Makefile
+  semodule -i munin_mysql.pp
+  popd
 fi
 
 service munin-node restart || /etc/init.d/munin-node restart
