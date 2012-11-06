@@ -41,5 +41,15 @@ for conf in * ; do
 done
 popd
 
+
+if selinuxenabled; then
+  semanage fcontext  -a  -t services_munin_plugin_exec_t  /etc/munin/openquery/mysql
+  semanage fcontext  -a  -t munin_etc_t  "/etc/munin/openquery/conf(/.*)?"
+  semanage fcontext  -a  -t munin_exec_t  "/etc/munin/openquery/munin-asyncd"
+
+
+  restorecon -rv /etc/munin/openquery/
+fi
+
 service munin-node restart || /etc/init.d/munin-node restart
 service munin-async restart || /etc/init.d/munin-async restart
