@@ -1,0 +1,18 @@
+munin_mysql.te
+
+module munin_mysql 1.0;
+
+require {
+        type unconfined_t;
+        type user_tmpfs_t;
+        type munin_services_plugin_t;
+        class sem { unix_read read write unix_write associate };
+        class shm { write unix_read getattr unix_write associate read };
+        class file { read write };
+}
+
+#============= munin_services_plugin_t ==============
+allow munin_services_plugin_t unconfined_t:sem { unix_read read write unix_write associate };
+allow munin_services_plugin_t unconfined_t:shm { write unix_read getattr unix_write associate read };
+allow munin_services_plugin_t user_tmpfs_t:file { read write };
+
