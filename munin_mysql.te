@@ -1,5 +1,3 @@
-munin_mysql.te
-
 module munin_mysql 1.0;
 
 require {
