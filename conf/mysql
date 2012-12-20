@@ -1,6 +1,6 @@
 
 [mysql_replication]
-    env.slave_io_running_critical 0.5
-    env.slave_sql_running_critical 0.5
-    env.seconds_behind_master_warning 60
-    env.seconds_behind_master_critical 120
+    env.slave_io_running.critical 0.5
+    env.slave_sql_running.critical 0.5
+    env.seconds_behind_master.warning 60
+    env.seconds_behind_master.critical 120
