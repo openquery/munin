@@ -148,7 +148,7 @@ MAIN: while(1) {
 		$process_name = "plugin:$plugin";
 		local $0 = "munin-asyncd [$process_name]";
 		
-		fetch_data($plugin, $when);
+		fetch_data($plugin, $should_have_been);
 	
 
 		# We end here if we forked
