@@ -27,6 +27,15 @@ then
     mysql_sorts \
     mysql_table_locks \
     mysql_tmp_tables \
+    wsrep_avgwritesetbytes \
+    wsrep_cluster_size \
+    wsrep_distance \
+    wsrep_errors \
+    wsrep_local_state \
+    wsrep_queue \
+    wsrep_transactions \
+    wsrep_writesetbytes \
+    wsrep_writesets \
     ;
   do
     rm -f "/etc/munin/plugins/${m}"
