@@ -1204,8 +1204,8 @@ sub update_variables {
 					   # 5.1.2 and earlier.
     );
     my %wsrep_cluster_status_map = (
-        PRIMARY =>  0,
-        NON_PRIMARY => 1,
+        'Primary' =>  0,
+        'non-Primary' => 1,
     );
 
     for my $query (@queries) {
