@@ -36,7 +36,7 @@ then
   if [ -e /usr/lib*/galera/libgalera_smm.so ]; then
 
     for m in  \
-      mysql_rep_cluster_status \
+      mysql_wsrep_cluster_status \
       mysql_wsrep_cluster_size \
       mysql_wsrep_local_state \
       mysql_wsrep_transactions \
