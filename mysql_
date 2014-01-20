@@ -1137,6 +1137,9 @@ sub show {
     die "Can't show data for '$graph_name' because InnoDB is disabled."
 	if $graph_name =~ /innodb_/ && $data->{_innodb_disabled};
 
+    die "Can't show data for '$graph_name' because not a Galera mysql version."
+	if $graph_name =~ /wsrep_/ && $data->{_galera_disabled};
+
     for my $ds (@{$graph->{data_sources}}) {
 	printf "%s.value %s\n",
 	    clean_fieldname($ds->{name}), $data->{$ds->{name}};
@@ -1226,6 +1229,7 @@ sub update_variables {
 	my $var = $wsrep_cluster_status_map{$data->{wsrep_cluster_status}};
 	$data->{wsrep_cluster_status} = $var;
     }
+	$data->{_galera_disabled} = 1 unless ($data->{wsrep_provider_name});
 }
 
 
