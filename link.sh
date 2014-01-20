@@ -33,7 +33,7 @@ then
     rm -f "/etc/munin/plugins/${m}"
     ln -s /etc/munin/openquery/mysql_ "/etc/munin/plugins/${m}"
   done
-  if [ -e /usr/lib*/galera/libgalera_smm.so ];
+  if [ -e /usr/lib*/galera/libgalera_smm.so ]; then
 
     for m in  \
       mysql_rep_cluster_status \
