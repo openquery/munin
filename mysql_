@@ -221,7 +221,7 @@ my %graphs = ();
 #---------------------------------------------------------------------
 
 
-$graphs{mysql_wsrep_cluster_status} = {
+$graphs{wsrep_cluster_status} = {
         config => {
             global_attrs => {
                 title  => 'Galera Status',
@@ -239,7 +239,7 @@ $graphs{mysql_wsrep_cluster_status} = {
         ],
 };
 
-$graphs{mysql_wsrep_cluster_size} = {
+$graphs{wsrep_cluster_size} = {
         config => {
             global_attrs => {
                 title  => 'Galera cluster size',
@@ -259,7 +259,7 @@ $graphs{mysql_wsrep_cluster_size} = {
 
 
 # http://www.codership.com/wiki/doku.php?id=galera_node_fsm
-$graphs{mysql_wsrep_local_state} = {
+$graphs{wsrep_local_state} = {
         config => {
             global_attrs => {
                 title  => 'Galera node state',
@@ -278,7 +278,7 @@ $graphs{mysql_wsrep_local_state} = {
 
     #---------------------------------------------------------------------
 
-$graphs{mysql_wsrep_transactions} = {
+$graphs{wsrep_transactions} = {
         config => {
             global_attrs => {
                 title  => 'Galera transactions',
@@ -302,7 +302,7 @@ $graphs{mysql_wsrep_transactions} = {
 
     #---------------------------------------------------------------------
 
-$graphs{mysql_wsrep_writesets} = {
+$graphs{wsrep_writesets} = {
         config => {
             global_attrs => {
                 title  => 'Galera writesets',
@@ -325,7 +325,7 @@ $graphs{mysql_wsrep_writesets} = {
         ],
 };
 
-$graphs{mysql_wsrep_writesetbytes} = {
+$graphs{wsrep_writesetbytes} = {
         config => {
             global_attrs => {
                 title  => 'Galera writesets bytes/sec',
@@ -347,7 +347,7 @@ $graphs{mysql_wsrep_writesetbytes} = {
                                                min   => 0},
         ],
 };
-$graphs{mysql_wsrep_avgwritesetbytes} = {
+$graphs{wsrep_avgwritesetbytes} = {
         config => {
             global_attrs => {
                 title  => 'Galera writesets average bytes',
@@ -378,7 +378,7 @@ $graphs{mysql_wsrep_avgwritesetbytes} = {
         ],
 };
 
-$graphs{mysql_wsrep_errors} = {
+$graphs{wsrep_errors} = {
         config => {
             global_attrs => {
                 title  => 'Galera transaction problems'
@@ -402,7 +402,7 @@ $graphs{mysql_wsrep_errors} = {
 };
 
 
-$graphs{mysql_wsrep_queue} = {
+$graphs{wsrep_queue} = {
         config => {
             global_attrs => {
                 title  => 'Galera queues'
@@ -425,7 +425,7 @@ $graphs{mysql_wsrep_queue} = {
 };
 
 
-$graphs{mysql_wsrep_flow} = {
+$graphs{wsrep_flow} = {
         config => {
             global_attrs => {
                 title  => 'Galera flow control',
@@ -446,7 +446,7 @@ $graphs{mysql_wsrep_flow} = {
   };
 
 
-$graphs{mysql_wsrep_distance} = {
+$graphs{wsrep_distance} = {
         config => {
             global_attrs => {
                 title  => 'Galera distance',
