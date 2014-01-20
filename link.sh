@@ -27,6 +27,7 @@ then
     mysql_sorts \
     mysql_table_locks \
     mysql_tmp_tables \
+    mysql_rep_cluster_status \
     ;
   do
     rm -f "/etc/munin/plugins/${m}"
@@ -35,21 +36,23 @@ then
   if [ -e /usr/lib*/galera/libgalera_smm.so ];
 
     for m in  \
-      wsrep_avgwritesetbytes \
-      wsrep_cluster_size \
-      wsrep_distance \
-      wsrep_errors \
-      wsrep_local_state \
-      wsrep_queue \
-      wsrep_transactions \
-      wsrep_writesetbytes \
-      wsrep_writesets \
+      mysql_rep_cluster_status \
+      mysql_wsrep_cluster_size \
+      mysql_wsrep_local_state \
+      mysql_wsrep_transactions \
+      mysql_wsrep_writesets \
+      mysql_wsrep_avgwritesetbytes \
+      mysql_wsrep_errors \
+      mysql_wsrep_queue \
+      mysql_wsrep_flow \
+      mysql_wsrep_distance \
       ;
     do
       rm -f "/etc/munin/plugins/${m}"
       ln -s /etc/munin/openquery/mysql_ "/etc/munin/plugins/${m}"
     done
   fi
+
 
 fi
 
@@ -75,4 +78,5 @@ if selinuxenabled; then
 fi
 
 service munin-node restart || /etc/init.d/munin-node restart
-service munin-asyncd restart || /etc/init.d/munin-asyncd restart
+[ -e /etc/init.d/munin-asyncd ] && service munin-asyncd restart || /etc/init.d/munin-asyncd restart
+[ -e /etc/init.d/munin-async  ] && service munin-async  restart || /etc/init.d/munin-async  restart

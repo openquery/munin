@@ -94,6 +94,10 @@ anything else to 1 for their respective fields in the "SHOW SLAVE STATUS" output
 This can be used to warn on slave failure if the warning and critical values
 are set as seen in a previous section.
 
+=item wsrep_cluster_status
+
+"PRIMARY" is translated 0 and "NON_PRIMARY" to 1.
+
 =back
 
 =head1 LICENSE
@@ -139,7 +143,6 @@ use Math::BigInt; # Used to append "=> lib 'GMP'" here, but GMP caused
 		  # debugging effort.
 
 use Munin::Plugin;
-
 
 my $has_cache;
 
@@ -218,8 +221,25 @@ my %graphs = ();
 #---------------------------------------------------------------------
 
 
+$graphs{mysql_wsrep_cluster_status} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera Status',
+                vlabel => 'PRIMARY',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+            check_ds => ('wsrep_cluster_status'),
+        },
+        data_sources => [
+            {name => 'wsrep_cluster_status', label => '0-Primary, 1-Non-Primary',
+                                           info  => 'If the host is primary',
+                                           type  => 'GAUGE'},
+        ],
+};
 
-$graphs{wsrep_cluster_size} = {
+$graphs{mysql_wsrep_cluster_size} = {
         config => {
             global_attrs => {
                 title  => 'Galera cluster size',
@@ -237,11 +257,9 @@ $graphs{wsrep_cluster_size} = {
         ],
 };
 
-    #---------------------------------------------------------------------
 
-    # wsrep_cluster_status is nice to have but a string
-
-$graphs{wsrep_local_state} = {
+# http://www.codership.com/wiki/doku.php?id=galera_node_fsm
+$graphs{mysql_wsrep_local_state} = {
         config => {
             global_attrs => {
                 title  => 'Galera node state',
@@ -252,7 +270,7 @@ $graphs{wsrep_local_state} = {
             check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
-            {name => 'wsrep_local_state', label => '1-Joining, 2-Donor, 3-Joined, 4-Synced',
+            {name => 'wsrep_local_state', label => '1-Joining, 2-Donor, 3-Joined, 4-Synced, 5-Donor, 6-Join after Donor ',
                                           info  => 'The state of the node in the cluster.',
                                           type  => 'GAUGE'},
         ],
@@ -260,7 +278,7 @@ $graphs{wsrep_local_state} = {
 
     #---------------------------------------------------------------------
 
-$graphs{wsrep_transactions} = {
+$graphs{mysql_wsrep_transactions} = {
         config => {
             global_attrs => {
                 title  => 'Galera transactions',
@@ -284,7 +302,7 @@ $graphs{wsrep_transactions} = {
 
     #---------------------------------------------------------------------
 
-$graphs{wsrep_writesets} = {
+$graphs{mysql_wsrep_writesets} = {
         config => {
             global_attrs => {
                 title  => 'Galera writesets',
@@ -307,7 +325,7 @@ $graphs{wsrep_writesets} = {
         ],
 };
 
-$graphs{wsrep_writesetbytes} = {
+$graphs{mysql_wsrep_writesetbytes} = {
         config => {
             global_attrs => {
                 title  => 'Galera writesets bytes/sec',
@@ -329,7 +347,7 @@ $graphs{wsrep_writesetbytes} = {
                                                min   => 0},
         ],
 };
-$graphs{wsrep_avgwritesetbytes} = {
+$graphs{mysql_wsrep_avgwritesetbytes} = {
         config => {
             global_attrs => {
                 title  => 'Galera writesets average bytes',
@@ -360,7 +378,7 @@ $graphs{wsrep_avgwritesetbytes} = {
         ],
 };
 
-$graphs{wsrep_errors} = {
+$graphs{mysql_wsrep_errors} = {
         config => {
             global_attrs => {
                 title  => 'Galera transaction problems'
@@ -384,7 +402,7 @@ $graphs{wsrep_errors} = {
 };
 
 
-$graphs{wsrep_queue} = {
+$graphs{mysql_wsrep_queue} = {
         config => {
             global_attrs => {
                 title  => 'Galera queues'
@@ -407,7 +425,7 @@ $graphs{wsrep_queue} = {
 };
 
 
-  $graphs{rep_flow} = {
+$graphs{mysql_wsrep_flow} = {
         config => {
             global_attrs => {
                 title  => 'Galera flow control',
@@ -428,7 +446,7 @@ $graphs{wsrep_queue} = {
   };
 
 
-$graphs{wsrep_distance} = {
+$graphs{mysql_wsrep_distance} = {
         config => {
             global_attrs => {
                 title  => 'Galera distance',
@@ -440,6 +458,8 @@ $graphs{wsrep_distance} = {
         },
         data_sources => [
             {name => 'wsrep_cert_deps_distance',    label => 'cert_deps_distance',
+                                                    type  => 'GAUGE'},
+            {name => 'wsrep_slave_threads',	    label => 'wsrep_slave_threads',
                                                     type  => 'GAUGE'},
             {name => 'wsrep_commit_window',         label => 'commit_window',
                                                     type  => 'GAUGE'},
@@ -1183,6 +1203,10 @@ sub update_variables {
 					   # table_cache in MySQL
 					   # 5.1.2 and earlier.
     );
+    my %wsrep_cluster_status_map = (
+        PRIMARY =>  0,
+        NON_PRIMARY => 1,
+    );
 
     for my $query (@queries) {
 	$data->{$query} = {};
@@ -1194,6 +1218,10 @@ sub update_variables {
 	    $data->{$var} = $row->[1];
 	}
 	$sth->finish();
+    }
+    if ($data->{wsrep_cluster_status}) {
+	my $var = $wsrep_cluster_status_map{$data->{wsrep_cluster_status}};
+	$data->{wsrep_cluster_status} = $var;
     }
 }
 
