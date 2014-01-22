@@ -27,7 +27,6 @@ then
     mysql_sorts \
     mysql_table_locks \
     mysql_tmp_tables \
-    mysql_rep_cluster_status \
     ;
   do
     rm -f "/etc/munin/plugins/${m}"
