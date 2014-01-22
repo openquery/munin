@@ -9,7 +9,8 @@ mysql_ - Munin plugin to display misc MySQL server status
 
 =head1 APPLICABLE SYSTEMS
 
-Any MySQL platform, tested by the author on MySQL 5.1.29 and 5.0.51
+Any MySQL platform, tested by the authors on MySQL 5.6.12 and 5.5.32,
+5.1.29, 5.0.51, MariaDB-5.5.29(galera).
 
 =head1 CONFIGURATION
 
@@ -113,10 +114,9 @@ WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
-USA.
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 =head1 VERSION
 
@@ -281,7 +281,7 @@ $graphs{wsrep_local_state} = {
         ],
 };
 
-    #---------------------------------------------------------------------
+#---------------------------------------------------------------------
 
 $graphs{wsrep_transactions} = {
         config => {
@@ -304,7 +304,7 @@ $graphs{wsrep_transactions} = {
         ],
 };
 
-    #---------------------------------------------------------------------
+#---------------------------------------------------------------------
 
 $graphs{wsrep_writesets} = {
         config => {
@@ -328,6 +328,9 @@ $graphs{wsrep_writesets} = {
         ],
 };
 
+#-------------------------
+
+
 $graphs{wsrep_writesetbytes} = {
         config => {
             global_attrs => {
@@ -349,6 +352,9 @@ $graphs{wsrep_writesetbytes} = {
                                                min   => 0},
         ],
 };
+
+#-------------------------
+
 $graphs{wsrep_avgwritesetbytes} = {
         config => {
             global_attrs => {
@@ -383,6 +389,9 @@ $graphs{wsrep_avgwritesetbytes} = {
         ],
 };
 
+
+#-------------------------
+
 $graphs{wsrep_errors} = {
         config => {
             global_attrs => {
@@ -405,6 +414,7 @@ $graphs{wsrep_errors} = {
         ],
 };
 
+#-------------------------
 
 $graphs{wsrep_queue} = {
         config => {
@@ -427,6 +437,8 @@ $graphs{wsrep_queue} = {
         ],
 };
 
+#-------------------------
+
 $graphs{wsrep_concurrency} = {
         config => {
             global_attrs => {
@@ -444,6 +456,8 @@ $graphs{wsrep_concurrency} = {
                                                    type  => 'GAUGE'},
         ],
 };
+
+#-------------------------
 
 $graphs{wsrep_flow} = {
         config => {
@@ -464,6 +478,7 @@ $graphs{wsrep_flow} = {
         ],
   };
 
+#-------------------------
 
 $graphs{wsrep_distance} = {
         config => {
@@ -483,10 +498,6 @@ $graphs{wsrep_distance} = {
                                                     type  => 'GAUGE'},
         ],
 };
-
-
-
-
 
 #-------------------------
 $graphs{bin_relay_log} = {
@@ -1166,7 +1177,7 @@ sub show {
         die "no name in ds in graph '$graph_name' for '$ds'" unless defined $ds->{name};
         my $name = $ds->{name};
         printf "%s.value %s\n",
-           clean_fieldname($name), $data->{$name} unless not defined $data->{$name};
+            clean_fieldname($name), $data->{$name} unless not defined $data->{$name};
     }
 
     return 0;
@@ -1250,10 +1261,10 @@ sub update_variables {
 	$sth->finish();
     }
     if ($data->{wsrep_cluster_status}) {
-	my $var = $wsrep_cluster_status_map{$data->{wsrep_cluster_status}};
-	$data->{wsrep_cluster_status} = $var;
+      my $var = $wsrep_cluster_status_map{$data->{wsrep_cluster_status}};
+      $data->{wsrep_cluster_status} = $var;
     }
-	$data->{_galera_disabled} = 1 unless ($data->{wsrep_provider_name});
+    $data->{_galera_disabled} = 1 unless ($data->{wsrep_provider_name});
 }
 
 
@@ -1265,7 +1276,7 @@ sub update_innodb {
 	$sth->execute();
     };
     if ($@) {
-	if ($@ =~ /Unknown table engine 'INNODB'|Cannot call SHOW INNODB STATUS because skip-innodb is defined/i) {
+	if ($@ =~ /Unknown (storage|table) engine 'INNODB'|Cannot call SHOW INNODB STATUS because skip-innodb is defined/i) {
 	    $data->{_innodb_disabled} = 1;
 	    return;
 	}
@@ -1362,22 +1373,22 @@ sub parse_innodb_status {
 
     # Add a dummy section to the end in case the innodb status output
     # has been truncated (Happens for status > 64K characters)
-#    $_ .= "\n----------\nDUMMY\n";
     $_ .= "\n----------\nDUMMY\n----------\n"; 
 
     my %section_map = (
 
-	'BUFFER POOL AND MEMORY'   => \&parse_buffer_pool_and_memory,
-	'FILE I/O'                 => \&parse_file_io,
+	'BUFFER POOL AND MEMORY'      => \&parse_buffer_pool_and_memory,
+	'INDIVIDUAL BUFFER POOL INFO' => \&skip,
+	'FILE I/O'                    => \&parse_file_io,
 	'INSERT BUFFER AND ADAPTIVE HASH INDEX'
 	    => \&parse_insert_buffer_and_adaptive_hash_index,
-	'LATEST DETECTED DEADLOCK' => \&skip,
-	'LATEST FOREIGN KEY ERROR' => \&skip,
-	'LOG'                      => \&parse_log,
-	'ROW OPERATIONS'           => \&skip,
-	'SEMAPHORES'               => \&parse_semaphores,
-	'TRANSACTIONS'             => \&parse_transactions,
-	'BACKGROUND THREAD'        => \&skip,
+	'LATEST DETECTED DEADLOCK'    => \&skip,
+	'LATEST FOREIGN KEY ERROR'    => \&skip,
+	'LOG'                         => \&parse_log,
+	'ROW OPERATIONS'              => \&skip,
+	'SEMAPHORES'                  => \&parse_semaphores,
+	'TRANSACTIONS'                => \&parse_transactions,
+	'BACKGROUND THREAD'           => \&skip,
     );
 
     skip_heading();
@@ -1406,7 +1417,6 @@ sub parse_innodb_status {
 my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 
 
-#sub match_dashes { return m/\G-+\n(?!-)/gc; }
 sub match_new_section { 
    return m/\G
             -+\n                 # --------------------------- 
@@ -1431,7 +1441,6 @@ sub parse_section {
 
     #warn substr($_, pos(), 10);
     for (;;) {
-#	return if match_dashes();
 	return if match_new_section;
 	next if $parser->();
 	skip_line();
@@ -1489,7 +1498,7 @@ sub parse_transactions {
 sub parse_file_io {
     parse_section(
 	sub {
-	     m/\GPending normal aio reads: (\d+)(?: \[(?:\d+, )*\d+\] )?, aio writes: (\d+)(?: \[(?:\d+, )*\d+\] )?,\n\s*ibuf aio reads: (\d+), log i\/o's: (\d+), sync i\/o's: (\d+)\n/gc && do {
+	    m/\GPending normal aio reads: (\d+)(?: \[(?:\d+, )*\d+\] )?, aio writes: (\d+)(?: \[(?:\d+, )*\d+\] )?,\n\s*ibuf aio reads: (\d+), log i\/o's: (\d+), sync i\/o's: (\d+)\n/gc && do {
 		$data->{ib_iop_aioread}  = $1;
 		$data->{ib_iop_aiowrite} = $2;
 		$data->{ib_iop_ibuf_aio} = $3;
@@ -1516,29 +1525,26 @@ sub parse_file_io {
 sub parse_insert_buffer_and_adaptive_hash_index {
     parse_section(
 	sub {
-            # MySQL < 5.5
-            m/\G(\d+) inserts, (\d+) merged recs, (\d+) merges\n/gc && do {
-                $data->{ib_ibuf_inserts}    = $1;
-                $data->{ib_ibuf_merged_rec} = $2;
-                $data->{ib_ibuf_merges}     = $3;
-                return 1;
-            };
-            # MySQL >= 5.5
-            m/\Gmerged operations:\n insert (\d+), delete mark \d+, delete \d+\ndiscarded operations:\n insert (\d+), delete mark \d+, delete \d+\n/gc && do {
-                $data->{ib_ibuf_inserts} = $1;
-                $data->{ib_ibuf_merged_rec} = $1 + $2;
-                return 1;
-            };
-            m/\GIbuf: size (\d+), free list len (\d+), seg size (\d+),(?: (\d+) merges)?\n/gc && do {
-                $data->{ib_ibuf_size}     = $1;
-                $data->{ib_ibuf_free_len} = $2;
-                $data->{ib_ibuf_seg_size} = $3;
-                $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
-                return 1;
-            };
-
-
-
+      # MySQL < 5.5
+      m/\G(\d+) inserts, (\d+) merged recs, (\d+) merges\n/gc && do {
+        $data->{ib_ibuf_inserts}    = $1;
+        $data->{ib_ibuf_merged_rec} = $2;
+        $data->{ib_ibuf_merges}     = $3;
+        return 1;
+      };
+      # MySQL >= 5.5
+      m/\Gmerged operations:\n insert (\d+), delete mark \d+, delete \d+\ndiscarded operations:\n insert (\d+), delete mark \d+, delete \d+\n/gc && do {
+        $data->{ib_ibuf_inserts} = $1;
+        $data->{ib_ibuf_merged_rec} = $1 + $2;
+        return 1;
+      };
+      m/\GIbuf: size (\d+), free list len (\d+), seg size (\d+),(?: (\d+) merges)?\n/gc && do {
+        $data->{ib_ibuf_size}     = $1;
+        $data->{ib_ibuf_free_len} = $2;
+        $data->{ib_ibuf_seg_size} = $3;
+        $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
+        return 1;
+      };
 	}
     );
 }
