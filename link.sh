@@ -46,6 +46,7 @@ then
       mysql_wsrep_queue \
       mysql_wsrep_flow \
       mysql_wsrep_distance \
+      mysql_wsrep_concurrency \
       ;
     do
       rm -f "/etc/munin/plugins/${m}"

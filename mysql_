@@ -96,13 +96,13 @@ are set as seen in a previous section.
 
 =item wsrep_cluster_status
 
-"PRIMARY" is translated 0 and "NON_PRIMARY" to 1.
+"Primary" is translated 0 and "non-Primary" to 1.
 
 =back
 
 =head1 LICENSE
 
-Copyright (C) 2008,2009 Kjell-Magne Øierud
+Copyright (C) 2008,2009 Kjell-Magne Øierud, 2014 Open Query
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -229,13 +229,15 @@ $graphs{wsrep_cluster_status} = {
             },
             data_source_attrs => {
                 draw  => 'LINE1',
+	            min   => '0',
+	            max   => '1',
             },
-            check_ds => ('wsrep_cluster_status'),
         },
         data_sources => [
             {name => 'wsrep_cluster_status', label => '0-Primary, 1-Non-Primary',
                                            info  => 'If the host is primary',
-                                           type  => 'GAUGE'},
+                                           type  => 'GAUGE'
+                                           critical => '1'},
         ],
 };
 
@@ -248,7 +250,6 @@ $graphs{wsrep_cluster_size} = {
             data_source_attrs => {
                 draw  => 'LINE1',
             },
-            check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
             {name => 'wsrep_cluster_size', label => 'Cluster size',
@@ -266,13 +267,15 @@ $graphs{wsrep_local_state} = {
             },
             data_source_attrs => {
                 draw  => 'LINE1',
+	            min   => '0',
+	            max   => '6',
             },
-            check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
             {name => 'wsrep_local_state', label => '1-Joining, 2-Donor, 3-Joined, 4-Synced, 5-Donor, 6-Join after Donor ',
                                           info  => 'The state of the node in the cluster.',
-                                          type  => 'GAUGE'},
+                                          type  => 'GAUGE',
+                                          warning => '4:4'},
         ],
 };
 
@@ -286,7 +289,6 @@ $graphs{wsrep_transactions} = {
             data_source_attrs => {
                 draw  => 'LINE1',
             },
-            check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
             {name => 'wsrep_last_committed', label => 'Committed transactions',
@@ -310,7 +312,6 @@ $graphs{wsrep_writesets} = {
             data_source_attrs => {
                 draw  => 'LINE1',
             },
-            check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
             {name => 'wsrep_replicated', label => 'Writesets sent',
@@ -333,7 +334,6 @@ $graphs{wsrep_writesetbytes} = {
             data_source_attrs => {
                 draw  => 'LINE1',
             },
-            check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
             {name => 'wsrep_replicated_bytes', label => 'Writesets bytes sent',
@@ -355,7 +355,6 @@ $graphs{wsrep_avgwritesetbytes} = {
             data_source_attrs => {
                 draw  => 'LINE1',
             },
-            check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
             {name => 'wsrep_replicated',       type  => 'DERIVE',
@@ -390,7 +389,6 @@ $graphs{wsrep_errors} = {
             data_source_attrs => {
                 draw  => 'LINE1',
             },
-            check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
             {name => 'wsrep_local_cert_failures', label => 'Certification failures',
@@ -414,7 +412,6 @@ $graphs{wsrep_queue} = {
             data_source_attrs => {
                 draw  => 'LINE1',
             },
-            check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
             {name => 'wsrep_local_send_queue',     label => 'Send queue length',
@@ -428,6 +425,22 @@ $graphs{wsrep_queue} = {
         ],
 };
 
+$graphs{wsrep_concurrency} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera Performance Concurrency'
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_apply_window',         label => 'Average distance concurrently applied seqno',
+                                                   type  => 'GAUGE'},
+            {name => 'wsrep_commit_window',        label => 'Average distance concurrently committed seqno',
+                                                   type  => 'GAUGE'},
+        ],
+};
 
 $graphs{wsrep_flow} = {
         config => {
@@ -437,7 +450,6 @@ $graphs{wsrep_flow} = {
             data_source_attrs => {
                 draw  => 'LINE1',
             },
-            check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
             {name => 'wsrep_flow_control_paused',    label => 'Time flow control was paused',
@@ -458,7 +470,6 @@ $graphs{wsrep_distance} = {
             data_source_attrs => {
                 draw  => 'LINE1',
             },
-            check_ds => ('wsrep_cluster_size'),
         },
         data_sources => [
             {name => 'wsrep_cert_deps_distance',    label => 'cert_deps_distance',
@@ -1097,7 +1108,11 @@ sub config {
     while (my ($k, $v) = each %conf) {
 	print "graph_$k $v\n";
     }
-    print "graph_category mysql2\n";
+    if ($graph_name =~ /wsrep_/) {
+      print "graph_category galera\n";
+    } else {
+      print "graph_category mysql2\n";
+    }
 
     my $i = 0;
     for my $ds (@{$graph->{data_sources}}) {
@@ -1578,8 +1593,8 @@ sub parse_buffer_pool_and_memory {
 
 sub handle_incomplete_innodb_status {
 
-    warn "Output from SHOW ENGINE INNDOB STATUS was truncated. "
-	. "This happens if the output of SEIS exceeds 64KB. "
+    warn "Output from SHOW ENGINE INNODB STATUS was truncated. "
+	. "This happens if the output of STATUS exceeds 64KB. "
 	. "Several of the InnoDB graphs might be affected by this.";
 
     # FIX Is it possible to find some of the missing values from SHOW
