@@ -236,7 +236,7 @@ $graphs{wsrep_cluster_status} = {
         data_sources => [
             {name => 'wsrep_cluster_status', label => '0-Primary, 1-Non-Primary',
                                            info  => 'If the host is primary',
-                                           type  => 'GAUGE'
+                                           type  => 'GAUGE',
                                            critical => '1'},
         ],
 };
