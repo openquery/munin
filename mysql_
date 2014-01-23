@@ -265,7 +265,7 @@ $graphs{wsrep_local_state} = {
             global_attrs => {
                 title  => 'Galera node state',
                 vlabel => 'State (galera_node_fsm)',
-                args   => '--lower-limit --upper-limit 6',
+                args   => '--lower-limit 0 --upper-limit 6',
             },
             data_source_attrs => {
                 draw  => 'LINE1',
