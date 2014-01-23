@@ -1265,7 +1265,6 @@ sub update_variables {
       $data->{wsrep_cluster_status} = $var;
     }
     if (defined $data->{wsrep_replicated_bytes} && defined $data->{wsrep_replicated}) {
-      $data->{wsrep_avgreplicated} = $data->{wsrep_replicated_bytes} / $data->{wsrep_replicated};
       if ($data->{wsrep_replicated} > 0) {
          $data->{wsrep_avgreplicated} = $data->{wsrep_replicated_bytes} / $data->{wsrep_replicated};
       } else {
