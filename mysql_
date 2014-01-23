@@ -382,9 +382,9 @@ $graphs{wsrep_avgwritesetbytes} = {
                                                graph => 'no',
                                                min   => 0},
             {name => 'wsrep_avgreplicated',    label => 'average size of sent writeset',
-                                               cdef  => 'wsrep_replicated_bytes,wsrep_replicated,/'},
+                                               type  => 'GAUGE'},
             {name => 'wsrep_avgreceived',      label => 'average size of received writeset',
-                                               cdef  => 'wsrep_received_bytes,wsrep_received,/'},
+                                               type  => 'GAUGE'},
 
         ],
 };
@@ -1263,6 +1263,12 @@ sub update_variables {
     if ($data->{wsrep_cluster_status}) {
       my $var = $wsrep_cluster_status_map{$data->{wsrep_cluster_status}};
       $data->{wsrep_cluster_status} = $var;
+    }
+    if (defined $data->{wsrep_replicated_bytes} && defined $data->{wsrep_replicated}) {
+      $data->{wsrep_avgreplicated} = $data->{wsrep_replicated_bytes} / $data->{wsrep_replicated};
+    }
+    if (defined $data->{wsrep_received_bytes} && defined $data->{wsrep_received}) {
+      $data->{wsrep_avgreceived} = $data->{wsrep_received_bytes} / $data->{wsrep_received};
     }
     $data->{_galera_disabled} = 1 unless ($data->{wsrep_provider_name});
 }
