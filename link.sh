@@ -65,7 +65,8 @@ popd
 
 
 if selinuxenabled; then
-  semanage fcontext  -a  -t services_munin_plugin_exec_t  /etc/munin/openquery/mysql_
+# Centos 6.4 is munin_services_plugin_exec_t
+  semanage fcontext  -a  -t services_munin_plugin_exec_t  /etc/munin/openquery/mysql_ || semanage fcontext -a -t munin_services_plugin_exec_t "/etc/munin/openquery/.*_"
   semanage fcontext  -a  -t munin_etc_t  "/etc/munin/openquery/conf(/.*)?"
   semanage fcontext  -a  -t munin_exec_t  "/etc/munin/openquery/munin-asyncd"
 
