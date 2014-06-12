@@ -319,12 +319,13 @@ $graphs{wsrep_writesets} = {
             {name => 'wsrep_replicated', label => 'Writesets sent',
                                          info  => '# of writesets sent to other nodes',
                                          type  => 'COUNTER',
-                                         min   => 0},
+                                         min   => '0',
+                                         graph => 'no'},
             {name => 'wsrep_received',   label => 'Writesets received',
                                          info  => '# of writesets received from other nodes',
-                                         cdef  => 'wsrep_received,-1,*',
                                          type  => 'COUNTER',
-                                         min   => 0},
+                                         min   => '0',
+                                         negative => 'wsrep_replicated'},
         ],
 };
 
@@ -337,55 +338,32 @@ $graphs{wsrep_writesetbytes} = {
                 title  => 'Galera writesets bytes/sec',
             },
             data_source_attrs => {
-                draw  => 'LINE1',
             },
         },
         data_sources => [
+            {name => 'wsrep_received_bytes',   label => 'Writesets bytes received',
+                                               info  => '# of bytes in writesets received from other nodes',
+                                               type  => 'DERIVE',
+                                               min   => 0,
+                                               graph => 'no'},
             {name => 'wsrep_replicated_bytes', label => 'Writesets bytes sent',
                                                info  => '# of bytes in writesets sent to other nodes',
                                                type  => 'DERIVE',
-                                               min   => 0},
-            {name => 'wsrep_received_bytes',   label => 'Writesets bytes received',
-                                               info  => '# of bytes in writesets received from other nodes',
-                                               cdef  => 'wsrep_received_bytes,-1,*',
+                                               draw  => 'LINE1',
+                                               min   => 0,
+                                               negative => 'wsrep_received_bytes'},
+            {name => 'wsrep_repl_keys_bytes', label => 'Writeset key size sent',
+                                               info  => '# of bytes in writesets of keys sent to other nodes',
                                                type  => 'DERIVE',
                                                min   => 0},
-        ],
-};
-
-#-------------------------
-
-$graphs{wsrep_avgwritesetbytes} = {
-        config => {
-            global_attrs => {
-                title  => 'Galera writesets average bytes',
-            },
-            data_source_attrs => {
-                draw  => 'LINE1',
-            },
-        },
-        data_sources => [
-            {name => 'wsrep_replicated',       type  => 'DERIVE',
-                                               label => 'number of replicated events',
-                                               graph => 'no',
+            {name => 'wsrep_repl_data_bytes', label => 'Writeset data size sent',
+                                               info  => '# of bytes in writesets of data sent to other nodes',
+                                               type  => 'DERIVE',
                                                min   => 0},
-            {name => 'wsrep_received',         type  => 'DERIVE',
-                                               label => 'number of received events',
-                                               graph => 'no',
+            {name => 'wsrep_repl_other_bytes', label => 'Writeset other size sent',
+                                               info  => '# of bytes in writesets of other data sent to other nodes',
+                                               type  => 'DERIVE',
                                                min   => 0},
-            {name => 'wsrep_replicated_bytes', type  => 'DERIVE',
-                                               label => 'size of replicated events',
-                                               graph => 'no',
-                                               min   => 0},
-            {name => 'wsrep_received_bytes',   type  => 'DERIVE',
-                                               label => 'size of received events',
-                                               graph => 'no',
-                                               min   => 0},
-            {name => 'wsrep_avgreplicated',    label => 'average size of sent writeset',
-                                               type  => 'GAUGE'},
-            {name => 'wsrep_avgreceived',      label => 'average size of received writeset',
-                                               type  => 'GAUGE'},
-
         ],
 };
 
@@ -419,21 +397,38 @@ $graphs{wsrep_errors} = {
 $graphs{wsrep_queue} = {
         config => {
             global_attrs => {
-                title  => 'Galera queues'
+                title  => 'Galera queues',
+	              vlabel => 'queue length received (-) / sent (+) per ${graph_period}',
             },
             data_source_attrs => {
                 draw  => 'LINE1',
             },
         },
         data_sources => [
-            {name => 'wsrep_local_send_queue',     label => 'Send queue length',
-                                                   type  => 'GAUGE'},
-            {name => 'wsrep_local_send_queue_avg', label => 'Average send queue length',
-                                                   type  => 'GAUGE'},
             {name => 'wsrep_local_recv_queue',     label => 'Receive queue length',
-                                                   type  => 'GAUGE'},
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
+            {name => 'wsrep_local_recv_queue_min', label => 'Receive queue length min',
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
             {name => 'wsrep_local_recv_queue_avg', label => 'Average receive queue length',
-                                                   type  => 'GAUGE'},
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
+            {name => 'wsrep_local_recv_queue_max', label => 'Receive queue length max',
+                                                   type  => 'GAUGE',
+                                                   graph => 'no'},
+            {name => 'wsrep_local_send_queue',     label => 'Send queue length',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_local_recv_queue'},
+            {name => 'wsrep_local_send_queue_min', label => 'Send queue length min',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_local_recv_queue_min'},
+            {name => 'wsrep_local_send_queue_avg', label => 'Average send queue length',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_local_recv_queue_avg'},
+            {name => 'wsrep_local_send_queue_max', label => 'Send queue length max',
+                                                   type  => 'GAUGE',
+                                                   negative => 'wsrep_local_recv_queue_max'},
         ],
 };
 
@@ -442,18 +437,31 @@ $graphs{wsrep_queue} = {
 $graphs{wsrep_concurrency} = {
         config => {
             global_attrs => {
-                title  => 'Galera Performance Concurrency Window',
-                vlabel => 'Average distance in seq no'
+                title  => 'Galera Performance - Apply to Commit',
+                vlabel => 'commit + / apply - '
             },
             data_source_attrs => {
                 draw  => 'LINE1',
+                type  => 'GAUGE',
             },
         },
         data_sources => [
             {name => 'wsrep_apply_window',         label => 'apply window',
-                                                   type  => 'GAUGE'},
+                                                   graph => 'no'},
+            {name => 'wsrep_apply_oooe',           label => 'apply out of order',
+                                                   graph => 'no'},
+            {name => 'wsrep_apply_oool',           label => 'apply out of order (slowness)',
+                                                   graph => 'no'},
+            {name => 'wsrep_apply_count',          label => 'apply out of order (count)',
+                                                   graph => 'no'},
             {name => 'wsrep_commit_window',        label => 'commit window',
-                                                   type  => 'GAUGE'},
+                                                   negative => 'wsrep_apply_window'},
+            {name => 'wsrep_commit_oooe',          label => 'commit out of order',
+                                                   negative => 'wsrep_apply_oooe'},
+            {name => 'wsrep_commit_oool',          label => 'commit out of order (slowness)',
+                                                   negative => 'wsrep_apply_oool'},
+            {name => 'wsrep_commit_count',         label => 'commit out of order (count)',
+                                                   negative => 'wsrep_apply_count'},
         ],
 };
 
@@ -463,6 +471,31 @@ $graphs{wsrep_flow} = {
         config => {
             global_attrs => {
                 title  => 'Galera flow control',
+	              vlabel => 'events received (-) / sent (+) per ${graph_period}',
+            },
+            data_source_attrs => {
+                draw  => 'LINE1',
+            },
+        },
+        data_sources => [
+            {name => 'wsrep_flow_control_recv',      label => 'Pause events received',
+                                                     type  => 'DERIVE',
+                                                     min   => 0,
+                                                     graph => 'no'},
+            {name => 'wsrep_flow_control_sent',      label => 'Pause events sent',
+                                                     type  => 'DERIVE',
+                                                     min   => 0,
+                                                     negative => 'wsrep_flow_control_recv'},
+        ],
+  };
+
+
+#-------------------------
+
+$graphs{wsrep_flow_paused} = {
+        config => {
+            global_attrs => {
+                title  => 'Galera flow control paused',
             },
             data_source_attrs => {
                 draw  => 'LINE1',
@@ -470,13 +503,13 @@ $graphs{wsrep_flow} = {
         },
         data_sources => [
             {name => 'wsrep_flow_control_paused',    label => 'Time flow control was paused',
-                                                     type  => 'GAUGE'},
-            {name => 'wsrep_flow_control_sent',      label => 'Pause events sent',
-                                                     type  => 'GAUGE'},
-            {name => 'wsrep_flow_control_recv',      label => 'Pause events received',
-                                                     type  => 'GAUGE'},
+                                                     type  => 'GAUGE',
+                                                     min   => '0',
+                                                     max   => '1',
+                                                     warning => 0.1,
+                                                     critical => 0.9},
         ],
-  };
+   };
 
 #-------------------------
 
@@ -491,6 +524,8 @@ $graphs{wsrep_distance} = {
         },
         data_sources => [
             {name => 'wsrep_cert_deps_distance',    label => 'cert_deps_distance',
+                                                    type  => 'GAUGE'},
+            {name => 'wsrep_cert_index_size',       label => 'wsrep_cert_index_size',
                                                     type  => 'GAUGE'},
             {name => 'wsrep_slave_threads',	    label => 'wsrep_slave_threads',
                                                     type  => 'GAUGE'},
@@ -573,11 +608,10 @@ $graphs{connections} = {
 
 #---------------------------------------------------------------------
 
-$graphs{files_tables} = {
+$graphs{files} = {
     config => {
 	global_attrs => {
-	    title  => 'Files and tables',
-	    vlabel => 'Tables',
+	    title  => 'Files',
 	},
 	data_source_attrs => {
 	    type  => 'GAUGE',
@@ -585,14 +619,63 @@ $graphs{files_tables} = {
 	},
     },
     data_sources => [
-	{name => 'table_open_cache', label  => 'Table cache',
+	{name => 'open_files_limit', label  => 'File Limit',
 				     draw   => 'AREA',
 				     colour => 'cdcfc4'},
-	{name => 'Open_files',       label => 'Open files'},
-	{name => 'Open_tables',      label => 'Open tables'},
-	{name => 'Opened_tables',    label => 'Opened tables',
+	{name => 'Open_files',       label => 'Open files',
 				     type  => 'DERIVE',
-	                             min   => 0},
+	           min   => 0},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{tables} = {
+    config => {
+	global_attrs => {
+	    title  => 'Tables',
+	},
+	data_source_attrs => {
+	    type  => 'GAUGE',
+	    draw  => 'LINE1',
+	},
+    },
+    data_sources => [
+	{name => 'table_open_cache',   label  => 'Table cache',
+				     draw   => 'AREA',
+				     colour => 'cdcfc4'},
+	{name => 'innodb_open_files',  label => 'Innodb Table Cache Limit'},
+	{name => 'Open_tables',        label => 'Open tables'},
+	{name => 'Slave_open_temp_tables',  label => 'Open Slave Temp Tables'},
+	{name => 'Opened_tables',      label => 'Opened tables',
+				     type  => 'DERIVE',
+	           min   => 0},
+	{name => 'Opened_views',       label => 'Opened Views',
+				     type  => 'DERIVE',
+	           min   => 0},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{table_definitions} = {
+    config => {
+	global_attrs => {
+	    title  => 'Tables Definitions',
+	},
+	data_source_attrs => {
+	    type  => 'GAUGE',
+	    draw  => 'LINE1',
+	},
+    },
+    data_sources => [
+	{name => 'table_definition_cache',  label => 'Cache Limit',
+				     draw   => 'AREA',
+				     colour => 'cdcfc4'},
+	{name => 'Open_table_definitions',  label => 'Open'},
+	{name => 'Opened_table_definitions',  label => 'Opened',
+				     type  => 'DERIVE',
+	           min   => 0},
     ],
 };
 
@@ -658,6 +741,23 @@ $graphs{innodb_insert_buf} = {
 	{name => 'ib_ibuf_inserts',    label => 'Inserts'},
 	{name => 'ib_ibuf_merged_rec', label => 'Merged Records'},
 	{name => 'ib_ibuf_merges',     label => 'Merges'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{innodb_adaptive_hash} = {
+    config => {
+	global_attrs => {
+	    title  => 'InnoDB Adaptive Hash Optimiser',
+	},
+	data_source_attrs => {
+	    draw => 'LINE1',
+	},
+    },
+    data_sources => [
+	{name => 'Innodb_adaptive_hash_hash_searches',    label => 'Hash Searches'},
+	{name => 'Innodb_adaptive_hash_nonhash_searches', label => 'Nonhash Searches'},
     ],
 };
 
@@ -783,6 +883,35 @@ $graphs{innodb_tnx} = {
 
 #---------------------------------------------------------------------
 
+$graphs{performance} = {
+    config => {
+	global_attrs => {
+	    title  => 'Performance Schema Losses',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE1',
+	},
+    },
+    data_sources => [
+  {name => 'Performance_schema_cond_classes_lost',     label => 'Condition classes'},
+  {name => 'Performance_schema_cond_instances_lost',   label => 'Condition instances'},
+  {name => 'Performance_schema_file_classes_lost',     label => 'File classes'},
+  {name => 'Performance_schema_file_handles_lost',     label => 'File handles'},
+  {name => 'Performance_schema_file_instances_lost',   label => 'File instances'},
+  {name => 'Performance_schema_locker_lost',           label => 'Locker'},
+  {name => 'Performance_schema_mutex_classes_lost',    label => 'Mutex classes'},
+  {name => 'Performance_schema_mutex_instances_lost',  label => 'Mutex instances'},
+  {name => 'Performance_schema_rwlock_classes_lost',   label => 'Read/Write lock classes'},
+  {name => 'Performance_schema_rwlock_instances_lost', label => 'Read/Write lock instances'},
+  {name => 'Performance_schema_table_handles_lost',    label => 'Table handles'},
+  {name => 'Performance_schema_table_instances_lost',  label => 'Table instances'},
+  {name => 'Performance_schema_thread_classes_lost',   label => 'Thread classes'},
+  {name => 'Performance_schema_thread_instances_lost', label => 'Thread instances'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
 $graphs{myisam_indexes} = {
     config => {
 	global_attrs => {
@@ -837,6 +966,8 @@ $graphs{qcache} = {
     data_sources => [
 	{name => 'Qcache_queries_in_cache', label => 'Queries in cache'},
 	{name => 'Qcache_hits',             label => 'Cache hits'},
+	{name => 'Subquery_cache_hit',      label => 'Subquery Cache hits'},
+	{name => 'Subquery_cache_miss',     label => 'Subquery Cache misses'},
 	{name => 'Qcache_inserts',          label => 'Inserts'},
 	{name => 'Qcache_not_cached',       label => 'Not cached'},
 	{name => 'Qcache_lowmem_prunes',    label => 'Low-memory prunes'},
@@ -862,6 +993,28 @@ $graphs{qcache_mem} = {
 	{name => 'Qcache_free_memory',  label => 'Free mem'},
     ],
 };
+
+
+#---------------------------------------------------------------------
+
+$graphs{max_mem} = {
+    config => {
+	global_attrs => {
+	    title  => 'Maximium memory that Mysql could use',
+	    vlabel => 'Bytes',
+	    args   => '--base 1024 --lower-limit 0',
+	},
+	data_source_attrs => {
+	    draw => 'AREASTACK',
+	    type => 'GAUGE',
+	},
+    },
+    data_sources => [
+	{name => 'mysql_connection_memory',    label => 'Connection Memory'},
+	{name => 'mysql_base_memory',  label => 'Base MYSQL Memory'},
+    ],
+};
+
 
 #---------------------------------------------------------------------
 
@@ -983,6 +1136,122 @@ $graphs{tmp_tables} = {
     ],
 };
 
+
+#---------------------------------------------------------------------
+
+$graphs{rows} = {
+    config => {
+  global_attrs => {
+      title  => 'Rows',
+  },
+  data_source_attrs => {
+      draw  => 'LINE2',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'Rows_read',     label => 'Read'},
+  {name => 'Rows_sent',     label => 'Sent'},
+  {name => 'Rows_tmp_read', label => 'Temp Read'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_read} = {
+    config => {
+  global_attrs => {
+      title  => 'Read Handler',
+  },
+  data_source_attrs => {
+      draw  => 'AREASTACK',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_read_first',       label => 'Key First'},
+  {name => 'Handler_read_key',         label => 'Key Read'},
+  {name => 'Handler_read_last',        label => 'Key Last'},
+  {name => 'Handler_read_prev',        label => 'Key Prev'},
+  {name => 'Handler_read_rnd',         label => 'Row position'},
+  {name => 'Handler_read_rnd_deleted', label => 'Row position delete'},
+  {name => 'Handler_read_rnd_next',    label => 'Row position next'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_transaction} = {
+    config => {
+  global_attrs => {
+      title  => 'Transactions Handler',
+  },
+  data_source_attrs => {
+      draw  => 'AREASTACK',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_commit',             label => 'Commit'},
+  {name => 'Handler_rollback',           label => 'Rollback'},
+  {name => 'Handler_savepoint',          label => 'Savepoint'},
+  {name => 'Handler_savepoint_rollback', label => 'Savepoint Rollback'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_write} = {
+    config => {
+  global_attrs => {
+      title  => 'Write/Update Handler',
+  },
+  data_source_attrs => {
+      draw => 'LINE2',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_write',  label => 'Writes'},
+  {name => 'Handler_update', label => 'Updates'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{handler_tmp} = {
+    config => {
+  global_attrs => {
+      title  => 'Temporary Write/Update Handler',
+  },
+  data_source_attrs => {
+      draw => 'LINE2',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'Handler_tmp_write',  label => 'Writes'},
+  {name => 'Handler_tmp_update', label => 'Updates'},
+    ],
+  };
+
+#---------------------------------------------------------------------
+
+$graphs{execution} = {
+    config => {
+  global_attrs => {
+      title  => 'Execution Events',
+  },
+  data_source_attrs => {
+      draw => 'LINE2',
+      type => 'GAUGE',
+  },
+    },
+    data_sources => [
+  {name => 'Executed_events',   label => 'Events'},
+  {name => 'Executed_triggers', label => 'Triggers'},
+    ],
+  };
 
 #---------------------------------------------------------------------
 #  M A I N
@@ -1174,7 +1443,7 @@ sub show {
 	if $graph_name =~ /wsrep_/ && $data->{_galera_disabled};
 
     for my $ds (@{$graph->{data_sources}}) {
-        printf "%s.value %s\n",
+	printf "%s.value %s\n",
 	    clean_fieldname($ds->{name}),
 	    defined $data->{$ds->{name}} ? $data->{$ds->{name}} : 'U';
     }
@@ -1212,11 +1481,8 @@ sub update_data {
 
     # Set up defaults in case the server is not a slave
     $data->{relay_log_space} = 0;
-    $data->{slave_io_running}   = 0;
-    $data->{slave_sql_running}   = 0;
-    $data->{seconds_behind_master}   = 0;
-    $data->{Slave_open_temp_tables}   = 0;
-    $data->{Slave_retried_transactions}   = 0;
+    $data->{slave_running}   = 0;
+    $data->{slave_stopped}   = 0;
 
     # Set up defaults in case binlog is not enabled
     $data->{ma_binlog_size} = 0;
@@ -1259,6 +1525,7 @@ sub update_variables {
 	}
 	$sth->finish();
     }
+
     if ($data->{wsrep_cluster_status}) {
       my $var = $wsrep_cluster_status_map{$data->{wsrep_cluster_status}};
       $data->{wsrep_cluster_status} = $var;
@@ -1278,6 +1545,27 @@ sub update_variables {
       }
     }
     $data->{_galera_disabled} = 1 unless ($data->{wsrep_provider_name});
+
+    $data->{'mysql_base_memory'} = $data->{'key_buffer_size'} 
+                                         + $data->{'query_cache_size'}
+                                         + $data->{'innodb_buffer_pool_size'}
+                                         + ( $data->{'innodb_additional_mem_pool_size'} || 0 )
+                                         + $data->{'innodb_log_buffer_size'}
+                                         + ( $data->{'tokudb_cache_size'} || 0 );
+
+    my $tmp_table_size = $data->{'tmp_table_size'};
+    my $max_heap_table_size = $data->{'max_heap_table_size'};
+    $data->{'mysql_connection_memory'} = $data->{'read_buffer_size'}
+                                   + $data->{'read_rnd_buffer_size'}
+                                   + $data->{'sort_buffer_size'}
+                                   + $data->{'join_buffer_size'}
+                                   + $data->{'binlog_cache_size'}
+                                   + $data->{'thread_stack'}
+                                   + ( $tmp_table_size >= $max_heap_table_size ? $tmp_table_size : $max_heap_table_size )
+                                   + ( $data->{'tokudb_read_buf_size'} || 0 );
+
+   $data->{'mysql_connection_memory'} *= $data->{'max_connections'};
+
 }
 
 
@@ -1386,7 +1674,7 @@ sub parse_innodb_status {
 
     # Add a dummy section to the end in case the innodb status output
     # has been truncated (Happens for status > 64K characters)
-    $_ .= "\n----------\nDUMMY\n----------\n"; 
+    $_ .= "\n----------\nDUMMY\n";
 
     my %section_map = (
 
@@ -1430,12 +1718,7 @@ sub parse_innodb_status {
 my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 
 
-sub match_new_section { 
-   return m/\G
-            -+\n                 # --------------------------- 
-            (?= [A-Z\/ ]+\n      # SECTION NAME
-                [=-]+\n)/gcx;    # --------------------------- ('=' on end of output)
-}
+sub match_dashes { return m/\G-+\n(?!-)/gc; }
 
 
 sub skip_line    { return m/\G.*\n/gc; }
@@ -1454,7 +1737,7 @@ sub parse_section {
 
     #warn substr($_, pos(), 10);
     for (;;) {
-	return if match_new_section;
+	return if match_dashes();
 	next if $parser->();
 	skip_line();
     }
@@ -1511,7 +1794,7 @@ sub parse_transactions {
 sub parse_file_io {
     parse_section(
 	sub {
-	    m/\GPending normal aio reads: (\d+)(?: \[(?:\d+, )*\d+\] )?, aio writes: (\d+)(?: \[(?:\d+, )*\d+\] )?,\n\s*ibuf aio reads: (\d+), log i\/o's: (\d+), sync i\/o's: (\d+)\n/gc && do {
+	    m/\GPending normal aio reads: (\d+), aio writes: (\d+),\n\s*ibuf aio reads: (\d+), log i\/o's: (\d+), sync i\/o's: (\d+)\n/gc && do {
 		$data->{ib_iop_aioread}  = $1;
 		$data->{ib_iop_aiowrite} = $2;
 		$data->{ib_iop_ibuf_aio} = $3;
@@ -1615,8 +1898,8 @@ sub parse_buffer_pool_and_memory {
 
 sub handle_incomplete_innodb_status {
 
-    warn "Output from SHOW ENGINE INNODB STATUS was truncated. "
-	. "This happens if the output of STATUS exceeds 64KB. "
+    warn "Output from SHOW ENGINE INNDOB STATUS was truncated. "
+	. "This happens if the output of SEIS exceeds 64KB. "
 	. "Several of the InnoDB graphs might be affected by this.";
 
     # FIX Is it possible to find some of the missing values from SHOW
