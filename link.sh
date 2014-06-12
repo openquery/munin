@@ -1,32 +1,44 @@
 #!/bin/bash
 
+# grep '^\$graphs{' mysql_ | cut -f 2 -d { | cut -f 1 -d }
 
 if pidof mysqld
 then
   for m in  \
-    mysql_bin_relay_log \
-    mysql_commands \
-    mysql_connections \
-    mysql_files_tables \
-    mysql_innodb_bpool \
-    mysql_innodb_bpool_act \
-    mysql_innodb_insert_buf \
-    mysql_innodb_io \
-    mysql_innodb_io_pend \
-    mysql_innodb_log \
-    mysql_innodb_rows \
-    mysql_innodb_semaphores \
-    mysql_innodb_tnx \
-    mysql_myisam_indexes \
-    mysql_network_traffic \
-    mysql_qcache \
-    mysql_qcache_mem  \
-    mysql_replication \
-    mysql_select_types \
-    mysql_slow \
-    mysql_sorts \
-    mysql_table_locks \
-    mysql_tmp_tables \
+     mysql_bin_relay_log      \
+     mysql_commands           \
+     mysql_connections        \
+     mysql_files              \
+     mysql_tables             \
+     mysql_table_definitions  \
+     mysql_innodb_bpool       \
+     mysql_innodb_bpool_act   \
+     mysql_innodb_insert_buf  \
+     mysql_innodb_adaptive_has\h
+     mysql_innodb_io          \
+     mysql_innodb_io_pend     \
+     mysql_innodb_log         \
+     mysql_innodb_rows        \
+     mysql_innodb_semaphores  \
+     mysql_innodb_tnx         \
+     mysql_performance        \
+     mysql_myisam_indexes     \
+     mysql_network_traffic    \
+     mysql_qcache             \
+     mysql_qcache_mem         \
+     mysql_max_mem            \
+     mysql_replication        \
+     mysql_select_types       \
+     mysql_slow               \
+     mysql_sorts              \
+     mysql_table_locks        \
+     mysql_tmp_tables         \
+     mysql_rows               \
+     mysql_handler_read       \
+     mysql_handler_transaction \
+     mysql_handler_write \
+     mysql_handler_tmp \
+     mysql_execution   \
     ;
   do
     rm -f "/etc/munin/plugins/${m}"
@@ -36,16 +48,17 @@ then
 
     for m in  \
       mysql_wsrep_cluster_status \
-      mysql_wsrep_cluster_size \
-      mysql_wsrep_local_state \
-      mysql_wsrep_transactions \
-      mysql_wsrep_writesets \
-      mysql_wsrep_avgwritesetbytes \
-      mysql_wsrep_errors \
-      mysql_wsrep_queue \
-      mysql_wsrep_flow \
-      mysql_wsrep_distance \
-      mysql_wsrep_concurrency \
+      mysql_wsrep_cluster_size   \
+      mysql_wsrep_local_state    \
+      mysql_wsrep_transactions   \
+      mysql_wsrep_writesets      \
+      mysql_wsrep_writesetbytes  \
+      mysql_wsrep_errors         \
+      mysql_wsrep_queue          \
+      mysql_wsrep_concurrency    \
+      mysql_wsrep_flow           \
+      mysql_wsrep_flow_paused    \
+      mysql_wsrep_distance       \
       ;
     do
       rm -f "/etc/munin/plugins/${m}"
