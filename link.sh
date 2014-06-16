@@ -14,7 +14,7 @@ then
      mysql_innodb_bpool       \
      mysql_innodb_bpool_act   \
      mysql_innodb_insert_buf  \
-     mysql_innodb_adaptive_has\h
+     mysql_innodb_adaptive_hash \
      mysql_innodb_io          \
      mysql_innodb_io_pend     \
      mysql_innodb_log         \
