@@ -4,6 +4,7 @@
 
 if pidof mysqld
 then
+  rm -f /etc/munin/plugins/mysql_files_tables
   for m in  \
      mysql_bin_relay_log      \
      mysql_commands           \
@@ -58,6 +59,7 @@ then
       mysql_wsrep_concurrency    \
       mysql_wsrep_flow           \
       mysql_wsrep_flow_paused    \
+      mysql_wsrep_flow_paused_ns \
       mysql_wsrep_distance       \
       ;
     do

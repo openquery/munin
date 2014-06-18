@@ -644,7 +644,9 @@ $graphs{tables} = {
 	{name => 'table_open_cache',   label  => 'Table cache',
 				     draw   => 'AREA',
 				     colour => 'cdcfc4'},
-	{name => 'innodb_open_files',  label => 'Innodb Table Cache Limit'},
+	{name => 'innodb_open_files',  label => 'Innodb Table Cache Limit',
+				     draw   => 'AREA',
+				     colour => 'ffd660'},
 	{name => 'Open_tables',        label => 'Open tables'},
 	{name => 'Slave_open_temp_tables',  label => 'Open Slave Temp Tables'},
 	{name => 'Opened_tables',      label => 'Opened tables',
@@ -1146,7 +1148,7 @@ $graphs{rows} = {
   },
   data_source_attrs => {
       draw  => 'LINE2',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -1165,7 +1167,7 @@ $graphs{handler_read} = {
   },
   data_source_attrs => {
       draw  => 'AREASTACK',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -1188,7 +1190,7 @@ $graphs{handler_transaction} = {
   },
   data_source_attrs => {
       draw  => 'AREASTACK',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -1208,7 +1210,7 @@ $graphs{handler_write} = {
   },
   data_source_attrs => {
       draw => 'LINE2',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -1226,7 +1228,7 @@ $graphs{handler_tmp} = {
   },
   data_source_attrs => {
       draw => 'LINE2',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -1244,7 +1246,7 @@ $graphs{execution} = {
   },
   data_source_attrs => {
       draw => 'LINE2',
-      type => 'GAUGE',
+      type => 'DERIVE',
   },
     },
     data_sources => [
@@ -1252,6 +1254,43 @@ $graphs{execution} = {
   {name => 'Executed_triggers', label => 'Triggers'},
     ],
   };
+
+#---------------------------------------------------------------------
+
+$graphs{icp} = {
+    config => {
+	global_attrs => {
+	    title  => 'Index Condition Pushdown',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE2',
+	    type => 'DERIVE',
+	},
+    },
+    data_sources => [
+	{name => 'Handler_icp_attempts', label => 'Attempts'},
+	{name => 'Handler_icp_match',    label => 'Matches'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
+$graphs{mrr} = {
+    config => {
+	global_attrs => {
+	    title  => 'Multi Range Read optimizations',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE2',
+	    type => 'DERIVE',
+	},
+    },
+    data_sources => [
+	{name => 'Handler_mrr_init', label => 'Uses'},
+	{name => 'Handler_mrr_key_refills',  label => 'Key refills'},
+	{name => 'Handler_mrr_rowid_refills',  label => 'Row refills'},
+    ],
+};
 
 #---------------------------------------------------------------------
 #  M A I N
@@ -1481,8 +1520,11 @@ sub update_data {
 
     # Set up defaults in case the server is not a slave
     $data->{relay_log_space} = 0;
-    $data->{slave_running}   = 0;
-    $data->{slave_stopped}   = 0;
+    $data->{slave_io_running}   = 0;
+    $data->{slave_sql_running}   = 0;
+    $data->{seconds_behind_master}   = 0;
+    $data->{Slave_open_temp_tables}   = 0;
+    $data->{Slave_retried_transactions}   = 0;
 
     # Set up defaults in case binlog is not enabled
     $data->{ma_binlog_size} = 0;
@@ -1674,13 +1716,13 @@ sub parse_innodb_status {
 
     # Add a dummy section to the end in case the innodb status output
     # has been truncated (Happens for status > 64K characters)
-    $_ .= "\n----------\nDUMMY\n";
+    $_ .= "\n----------\nDUMMY\n----------\n"; 
 
     my %section_map = (
 
-	'BUFFER POOL AND MEMORY'      => \&parse_buffer_pool_and_memory,
+	'BUFFER POOL AND MEMORY'   => \&parse_buffer_pool_and_memory,
 	'INDIVIDUAL BUFFER POOL INFO' => \&skip,
-	'FILE I/O'                    => \&parse_file_io,
+	'FILE I/O'                 => \&parse_file_io,
 	'INSERT BUFFER AND ADAPTIVE HASH INDEX'
 	    => \&parse_insert_buffer_and_adaptive_hash_index,
 	'LATEST DETECTED DEADLOCK'    => \&skip,
@@ -1703,12 +1745,14 @@ sub parse_innodb_status {
 	    last;
 	}
 
-  if (exists $section_map{$sec}) {
+	if (exists $section_map{$sec}) {
       $section_map{$sec}->();
-  } else {
+	} else {
       #warn "Unknown section: $1";
       skip();
-  }
+	}
+
+	$section_map{$sec}->();
     }
 }
 
@@ -1720,7 +1764,12 @@ sub parse_innodb_status {
 my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 
 
-sub match_dashes { return m/\G-+\n(?!-)/gc; }
+sub match_new_section { 
+   return m/\G
+            -+\n                 # --------------------------- 
+            (?= [A-Z\/ ]+\n      # SECTION NAME
+                [=-]+\n)/gcx;    # --------------------------- ('=' on end of output)
+}
 
 
 sub skip_line    { return m/\G.*\n/gc; }
@@ -1739,7 +1788,7 @@ sub parse_section {
 
     #warn substr($_, pos(), 10);
     for (;;) {
-	return if match_dashes();
+	return if match_new_section;
 	next if $parser->();
 	skip_line();
     }
@@ -1796,7 +1845,7 @@ sub parse_transactions {
 sub parse_file_io {
     parse_section(
 	sub {
-	    m/\GPending normal aio reads: (\d+), aio writes: (\d+),\n\s*ibuf aio reads: (\d+), log i\/o's: (\d+), sync i\/o's: (\d+)\n/gc && do {
+	    m/\GPending normal aio reads: (\d+)(?: \[(?:\d+, )*\d+\] )?, aio writes: (\d+)(?: \[(?:\d+, )*\d+\] )?,\n\s*ibuf aio reads: (\d+), log i\/o's: (\d+), sync i\/o's: (\d+)\n/gc && do {
 		$data->{ib_iop_aioread}  = $1;
 		$data->{ib_iop_aiowrite} = $2;
 		$data->{ib_iop_ibuf_aio} = $3;
@@ -1823,26 +1872,27 @@ sub parse_file_io {
 sub parse_insert_buffer_and_adaptive_hash_index {
     parse_section(
 	sub {
-      # MySQL < 5.5
-      m/\G(\d+) inserts, (\d+) merged recs, (\d+) merges\n/gc && do {
-        $data->{ib_ibuf_inserts}    = $1;
-        $data->{ib_ibuf_merged_rec} = $2;
-        $data->{ib_ibuf_merges}     = $3;
-        return 1;
-      };
-      # MySQL >= 5.5
-      m/\Gmerged operations:\n insert (\d+), delete mark \d+, delete \d+\ndiscarded operations:\n insert (\d+), delete mark \d+, delete \d+\n/gc && do {
-        $data->{ib_ibuf_inserts} = $1;
-        $data->{ib_ibuf_merged_rec} = $1 + $2;
-        return 1;
-      };
+	    # MySQL < 5.5
+	    m/\G(\d+) inserts, (\d+) merged recs, (\d+) merges\n/gc && do {
+		$data->{ib_ibuf_inserts}    = $1;
+		$data->{ib_ibuf_merged_rec} = $2;
+		$data->{ib_ibuf_merges}     = $3;
+		return 1;
+	    };
+	    # MySQL >= 5.5
+	    m/\Gmerged operations:\n insert (\d+), delete mark \d+, delete \d+\ndiscarded operations:\n insert (\d+), delete mark \d+, delete \d+\n/gc && do {
+		$data->{ib_ibuf_inserts} = $1;
+		$data->{ib_ibuf_merged_rec} = $1 + $2;
+		return 1;
+	    };
+
       m/\GIbuf: size (\d+), free list len (\d+), seg size (\d+),(?: (\d+) merges)?\n/gc && do {
-        $data->{ib_ibuf_size}     = $1;
-        $data->{ib_ibuf_free_len} = $2;
-        $data->{ib_ibuf_seg_size} = $3;
-        $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
-        return 1;
-      };
+    $data->{ib_ibuf_size}     = $1;
+    $data->{ib_ibuf_free_len} = $2;
+    $data->{ib_ibuf_seg_size} = $3;
+    $data->{ib_ibuf_merges}   = $4 if defined $4; # MySQL >= 5.5
+		return 1;
+	    };
 	}
     );
 }
@@ -1900,8 +1950,8 @@ sub parse_buffer_pool_and_memory {
 
 sub handle_incomplete_innodb_status {
 
-    warn "Output from SHOW ENGINE INNDOB STATUS was truncated. "
-	. "This happens if the output of SEIS exceeds 64KB. "
+    warn "Output from SHOW ENGINE INNODB STATUS was truncated. "
+	. "This happens if the output of STATUS exceeds 64KB. "
 	. "Several of the InnoDB graphs might be affected by this.";
 
     # FIX Is it possible to find some of the missing values from SHOW
