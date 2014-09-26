@@ -101,5 +101,5 @@ if selinuxenabled; then
 fi
 
 service munin-node restart || /etc/init.d/munin-node restart
-[ -e /etc/init.d/munin-asyncd ] && service munin-asyncd restart || /etc/init.d/munin-asyncd restart
-[ -e /etc/init.d/munin-async  ] && service munin-async  restart || /etc/init.d/munin-async  restart
+[ -e /etc/init.d/munin-asyncd ] && service munin-asyncd restart
+[ -e /etc/init.d/munin-async  ] && service munin-async  restart
