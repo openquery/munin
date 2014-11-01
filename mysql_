@@ -15,7 +15,7 @@ Any MySQL platform, tested by the authors on:
 * MySQL 5.1.29,
 * MySQL 5.0.51
 * MariaDB 5.5.39
-* MariaDB galera 5.5.29
+* MariaDB-5.5.39(galera).
 
 =head1 CONFIGURATION
 
@@ -460,16 +460,12 @@ $graphs{wsrep_concurrency} = {
                                                    graph => 'no'},
             {name => 'wsrep_apply_oool',           label => 'apply out of order (slowness)',
                                                    graph => 'no'},
-            {name => 'wsrep_apply_count',          label => 'apply out of order (count)',
-                                                   graph => 'no'},
             {name => 'wsrep_commit_window',        label => 'commit window',
                                                    negative => 'wsrep_apply_window'},
             {name => 'wsrep_commit_oooe',          label => 'commit out of order',
                                                    negative => 'wsrep_apply_oooe'},
             {name => 'wsrep_commit_oool',          label => 'commit out of order (slowness)',
                                                    negative => 'wsrep_apply_oool'},
-            {name => 'wsrep_commit_count',         label => 'commit out of order (count)',
-                                                   negative => 'wsrep_apply_count'},
         ],
 };
 
@@ -956,35 +952,6 @@ $graphs{innodb_tnx} = {
 
 #---------------------------------------------------------------------
 
-$graphs{performance} = {
-    config => {
-	global_attrs => {
-	    title  => 'Performance Schema Losses',
-	},
-	data_source_attrs => {
-	    draw  => 'LINE1',
-	},
-    },
-    data_sources => [
-  {name => 'Performance_schema_cond_classes_lost',     label => 'Condition classes'},
-  {name => 'Performance_schema_cond_instances_lost',   label => 'Condition instances'},
-  {name => 'Performance_schema_file_classes_lost',     label => 'File classes'},
-  {name => 'Performance_schema_file_handles_lost',     label => 'File handles'},
-  {name => 'Performance_schema_file_instances_lost',   label => 'File instances'},
-  {name => 'Performance_schema_locker_lost',           label => 'Locker'},
-  {name => 'Performance_schema_mutex_classes_lost',    label => 'Mutex classes'},
-  {name => 'Performance_schema_mutex_instances_lost',  label => 'Mutex instances'},
-  {name => 'Performance_schema_rwlock_classes_lost',   label => 'Read/Write lock classes'},
-  {name => 'Performance_schema_rwlock_instances_lost', label => 'Read/Write lock instances'},
-  {name => 'Performance_schema_table_handles_lost',    label => 'Table handles'},
-  {name => 'Performance_schema_table_instances_lost',  label => 'Table instances'},
-  {name => 'Performance_schema_thread_classes_lost',   label => 'Thread classes'},
-  {name => 'Performance_schema_thread_instances_lost', label => 'Thread instances'},
-    ],
-};
-
-#---------------------------------------------------------------------
-
 $graphs{innodb_history_list_length} = {
     config => {
 	global_attrs => {
@@ -1076,6 +1043,35 @@ $graphs{innodb_descriptors} = {
 
 #---------------------------------------------------------------------
 
+$graphs{performance} = {
+    config => {
+	global_attrs => {
+	    title  => 'Performance Schema Losses',
+	},
+	data_source_attrs => {
+	    draw  => 'LINE1',
+	},
+    },
+    data_sources => [
+  {name => 'Performance_schema_cond_classes_lost',     label => 'Condition classes'},
+  {name => 'Performance_schema_cond_instances_lost',   label => 'Condition instances'},
+  {name => 'Performance_schema_file_classes_lost',     label => 'File classes'},
+  {name => 'Performance_schema_file_handles_lost',     label => 'File handles'},
+  {name => 'Performance_schema_file_instances_lost',   label => 'File instances'},
+  {name => 'Performance_schema_locker_lost',           label => 'Locker'},
+  {name => 'Performance_schema_mutex_classes_lost',    label => 'Mutex classes'},
+  {name => 'Performance_schema_mutex_instances_lost',  label => 'Mutex instances'},
+  {name => 'Performance_schema_rwlock_classes_lost',   label => 'Read/Write lock classes'},
+  {name => 'Performance_schema_rwlock_instances_lost', label => 'Read/Write lock instances'},
+  {name => 'Performance_schema_table_handles_lost',    label => 'Table handles'},
+  {name => 'Performance_schema_table_instances_lost',  label => 'Table instances'},
+  {name => 'Performance_schema_thread_classes_lost',   label => 'Thread classes'},
+  {name => 'Performance_schema_thread_instances_lost', label => 'Thread instances'},
+    ],
+};
+
+#---------------------------------------------------------------------
+
 $graphs{myisam_indexes} = {
     config => {
 	global_attrs => {
@@ -1128,7 +1124,7 @@ $graphs{qcache} = {
 	},
     },
     data_sources => [
-	{name => 'Qcache_queries_in_cache', label => 'Queries in cache'},
+	{name => 'Qcache_queries_in_cache', label => 'Queries in cache', type  => 'GAUGE'},
 	{name => 'Qcache_hits',             label => 'Cache hits'},
 	{name => 'Subquery_cache_hit',      label => 'Subquery Cache hits'},
 	{name => 'Subquery_cache_miss',     label => 'Subquery Cache misses'},
@@ -1164,7 +1160,7 @@ $graphs{qcache_mem} = {
 $graphs{max_mem} = {
     config => {
 	global_attrs => {
-	    title  => 'Maximium memory that Mysql could use',
+	    title  => 'Maximum memory that Mysql could use',
 	    vlabel => 'Bytes',
 	    args   => '--base 1024 --lower-limit 0',
 	},
@@ -1680,11 +1676,11 @@ sub update_data {
 
     delete $graphs{execution} if not defined $data->{Executed_events}
         && not defined $data->{Executed_triggers};
-    
+
     delete $graphs{icp} if not defined $data->{Handler_icp_attempts}
         && not defined $data->{Handler_icp_matches};
-    
-    delete $graphs{adaptive_hash}
+
+    delete $graphs{innodb_adaptive_hash}
         if not defined $data->{Innodb_adaptive_hash_hash_searches}
         && not defined $data->{Innodb_adaptive_hash_non_hash_searches};
 
@@ -1734,12 +1730,6 @@ sub update_variables {
 	$sth->finish();
     }
 
-    if ($data->{wsrep_cluster_status}) {
-      my $var = $wsrep_cluster_status_map{$data->{wsrep_cluster_status}};
-      $data->{wsrep_cluster_status} = $var;
-    }
-    $data->{_galera_disabled} = 1 unless ($data->{wsrep_provider_name});
-
     $data->{'mysql_base_memory'} = $data->{'key_buffer_size'} 
                                          + $data->{'query_cache_size'}
                                          + $data->{'innodb_buffer_pool_size'}
@@ -1760,6 +1750,12 @@ sub update_variables {
 
    # wsrep_thread_count was separated from max_connections for mariadb-5.5.38 https://mariadb.atlassian.net/browse/MDEV-6206
    $data->{'mysql_connection_memory'} *= $data->{'max_connections'} + ( $data->{'wsrep_thread_count'} || 0 );
+
+    if ($data->{wsrep_cluster_status}) {
+      my $var = $wsrep_cluster_status_map{$data->{wsrep_cluster_status}};
+      $data->{wsrep_cluster_status} = $var;
+    }
+    $data->{_galera_disabled} = 1 unless ($data->{wsrep_provider_name});
 }
 
 
@@ -1873,7 +1869,7 @@ sub parse_innodb_status {
 
     # Add a dummy section to the end in case the innodb status output
     # has been truncated (Happens for status > 64K characters)
-    $_ .= "\n----------\nDUMMY\n----------\n"; 
+    $_ .= "\n----------\nDUMMY\n----------\n";
 
     my %section_map = (
 
@@ -1920,9 +1916,9 @@ sub parse_innodb_status {
 my $innodb_bigint_rx = qr{([[a-fA-F\d]+)(?: (\d+))?};
 
 
-sub match_new_section { 
+sub match_new_section {
    return m/\G
-            -+\n                 # --------------------------- 
+            -+\n                 # ---------------------------
             (?= [A-Z\/ ]+\n      # SECTION NAME
                 [=-]+\n)/gcx;    # --------------------------- ('=' on end of output)
 }
