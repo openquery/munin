@@ -24,8 +24,7 @@ if selinuxenabled; then
   restorecon -rv /usr/sbin/munin-asyncd
   restorecon -rv /etc/munin/openquery/
   pushd /etc/munin/openquery
-  make -f /usr/share/selinux/devel/Makefile
-  semodule -i munin_mysql.pp
+  make -f /usr/share/selinux/devel/Makefile && semodule -i munin_mysql.pp
   popd
 fi
 

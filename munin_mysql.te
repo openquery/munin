@@ -2,16 +2,27 @@ module munin_mysql 1.1;
 
 require {
         type unconfined_t;
+        type urandom_device_t;
         type user_tmpfs_t;
         type mysqld_var_run_t;
         type sysfs_t;
+        type mysqld_t;
+        type munin_t;
+        type munin_selinux_plugin_exec_t;
         type munin_services_plugin_t;
+        type munin_selinux_plugin_t;
         class sem { unix_read read write unix_write associate };
         class shm { write unix_read getattr unix_write associate read };
         class file { read write open ioctl };
+        class dir { search };
         class unix_stream_socket { connectto };
         class sock_file { write };
+        class chr_file { read open };
 }
+
+# /etc/munin/openquery directory
+#============= munin_t ==============
+allow munin_t munin_selinux_plugin_exec_t:dir search;
 
 # Mysql plugin uses Cache-Cache for shared memory
 #============= munin_services_plugin_t ==============
@@ -21,10 +32,18 @@ allow munin_services_plugin_t user_tmpfs_t:file { read write };
 
 # Mysql connect - TODO - new type
 #============= munin_services_plugin_t ==============
-allow munin_services_plugin_t mysqld_var_run_t:unix_stream_socket connectto;
-allow munin_services_plugin_t mysqld_var_run_t:sock_file write;
+allow munin_selinux_plugin_t mysqld_t:unix_stream_socket connectto;
+allow munin_selinux_plugin_t mysqld_var_run_t:sock_file write;
 
 # Numa plugin - TODO new type
 #============= munin_services_plugin_t ==============
-allow munin_services_plugin_t sysfs_t:file { read ioctl open };
+allow munin_selinux_plugin_t sysfs_t:file { read ioctl open };
+
+#============= munin_selinux_plugin_t ==============
+#allow munin_selinux_plugin_t rpm_script_t:sem { unix_read read write unix_write associate };
+#allow munin_selinux_plugin_t rpm_script_t:shm { write unix_read getattr unix_write associate read };
+#allow munin_selinux_plugin_t rpm_script_tmpfs_t:file { read write };
+
+#!!!! This avc can be allowed using the boolean 'global_ssp'
+allow munin_selinux_plugin_t urandom_device_t:chr_file { read open };
 
