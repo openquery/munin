@@ -2,6 +2,9 @@
 
 # --no-check-certificate as wget 1.12-1.8.el6 didn't recognise *.domain in SubjectAltName
 
+rm /etc/munin/openquery/mysql_.bak /etc/munin/openquery/numa_.bak
+mv /etc/munin/openquery/mysql_ /etc/munin/openquery/mysql_.bak
+mv /etc/munin/openquery/numa_ /etc/munin/openquery/numa_.bak
 wget --no-check-certificate https://raw.githubusercontent.com/munin-monitoring/munin/devel/plugins/node.d/mysql_.in -O - | sed -e 's:@@PERL@@:/usr/bin/perl:' > /etc/munin/openquery/mysql_ || exit 1
 wget --no-check-certificate https://raw.githubusercontent.com/munin-monitoring/munin/devel/plugins/node.d.linux/numa_.in -O - | sed -e 's:@@GOODSH@@:/bin/bash:' > /etc/munin/openquery/numa_ || exit 1
 
