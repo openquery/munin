@@ -18,7 +18,8 @@ munin-node-configure  --libdir /etc/munin/openquery/ --shell | sh
 
 if selinuxenabled; then
 # Centos 6.4 is munin_services_plugin_exec_t
-  semanage fcontext  -a  -t services_munin_plugin_exec_t  /etc/munin/openquery/mysql_ || semanage fcontext -a -t munin_services_plugin_exec_t "/etc/munin/openquery/.*_"
+  #semanage fcontext  -a  -t services_munin_plugin_exec_t  /etc/munin/openquery/mysql_ || semanage fcontext -a -t munin_services_plugin_exec_t "/etc/munin/openquery/.*_"
+  semanage fcontext  -a  -t munin_selinux_plugin_exec_t  "/etc/munin/openquery(/.*)?"
 
   restorecon -rv /usr/sbin/munin-asyncd
   restorecon -rv /etc/munin/openquery/
