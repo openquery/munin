@@ -10,7 +10,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/munin-monitoring/m
 
 if [ ! -f /usr/sbin/munin-asyncd.orig ]; then
     cp /usr/sbin/munin-asyncd /usr/sbin/munin-asyncd.orig
-    wget --no-check-certificate https://raw.githubusercontent.com/munin-monitoring/munin/devel/node/_bin/munin-asyncd -O /usr/sbin/munin-asyncd || exit 1
+    wget --no-check-certificate https://raw.githubusercontent.com/munin-monitoring/munin/devel/script/munin-asyncd -O /usr/sbin/munin-asyncd || exit 1
     chown root: /usr/sbin/munin-asyncd
 fi
 
